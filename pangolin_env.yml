@@ -1,0 +1,36 @@
+name: pangolin
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:q
+  - python=3.9
+  - setuptools<58.0
+  - git
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - ipykernel
+  - matplotlib
+  - seaborn
+  
+  - pip
+  - pip:
+    - google-cloud-logging
+    - google-cloud-bigquery
+    - google-cloud-storage
+    - google-cloud-secret-manager
+    - google-cloud-billing
+    - google-api-python-client
+    - pandas-gbq
+    - gspread_pandas
+    
+    - biopython 
+    - pyfastx
+    - "--editable=git+https://github.com/jamescasbon/PyVCF.git@476169c#egg=pyvcf"
+    - "--editable=git+https://github.com/tkzeng/Pangolin#egg=pangolin"
+    
+variables:
+  variable_1: placeholder_variable
