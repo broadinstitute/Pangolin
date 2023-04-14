@@ -98,7 +98,7 @@ class PangolinScore:
         self._annotation_file = af
         
         if not os.path.exists(self._annotation_file):
-            import utils
+            from pangolin import utils
             utils.create_db(self._annotation_file)
         
         try:

@@ -19,7 +19,7 @@ def create_db(annotation_file, filter_str=None):
     elif annotation_file.endswith(".gtf.gz"):
         prefix = annotation_file[:-7]
     else:
-        exit(f"ERROR, annotation_file {annotation_file} should be a GTF file.")
+        print(f"ERROR, annotation_file {annotation_file} should be a GTF file.")
 
     def transform_filter(feat):
         if feat.featuretype not in ["gene", "transcript", "exon"]:
@@ -33,7 +33,7 @@ def create_db(annotation_file, filter_str=None):
                 return False
         return feat
 
-    db = gffutils.create_db(gtf, 
+    db = gffutils.create_db(annotation_file, 
                             prefix+".db", 
                             force=True,
                             disable_infer_genes=True,
