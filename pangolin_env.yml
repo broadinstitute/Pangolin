@@ -4,7 +4,7 @@ channels:
   - defaults
   - conda-forge
 
-dependencies:q
+dependencies:
   - python=3.9
   - setuptools<58.0
   - git
@@ -29,8 +29,7 @@ dependencies:q
     
     - biopython 
     - pyfastx
-    - "--editable=git+https://github.com/jamescasbon/PyVCF.git@476169c#egg=pyvcf"
-    - "--editable=git+https://github.com/tkzeng/Pangolin#egg=pangolin"
+    - pyvcf
     
 variables:
   variable_1: placeholder_variable

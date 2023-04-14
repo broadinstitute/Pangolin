@@ -1,2 +1,5 @@
-GRCh37.primary_assembly.genome.fa.gz
-GRCh37.primary_assembly.genome.fa.gz.fxi
+.ipynb_checkpoints/
+*.vcf
+*.db
+*.fa.gz
+*.fa.gz.fxi
