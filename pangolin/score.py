@@ -23,6 +23,7 @@ IN_MAP = np.asarray([[0, 0, 0, 0],
 
 def one_hot_encode(seq, strand):
     # TODO: is there a sklearn method that's faster?
+    # TODO: Qin - I didn't find a sklearn method for this. I tried to timeit with https://gist.github.com/rachidelfermi/7fce95fd67e67fa47681e2f7d206c5a3 for a small sequence but I don't see a big difference in terms of runtime.
     seq = seq.upper().replace('A', '1').replace('C', '2')
     seq = seq.replace('G', '3').replace('T', '4').replace('N', '0')
     if strand == '+':
@@ -41,8 +42,8 @@ class PangolinScore:
         self._output_file     = None
         self._column_ids      = "CHROM,POS,REF,ALT"
         self._mask            = True
-        self._score_cutoff    = None  # TODO: what is the correct default?
-        self._distance        = 50
+        self._score_cutoff    = None  # TODO: what is the correct default? Qin: we won't have a cutoff, we will keep all prediction.
+        self._distance        = 50  # TODO: we will have to change this to 500
         self._score_exons     = False
         
         self.fp_model_weight_dir = None
@@ -283,6 +284,7 @@ class PangolinScore:
                                               np.zeros(ndiff),
                                               alt[l//2+1:]
                                              ])  # TODO: can this be initialized?
+                        # TODO: Qin - What do you mean by this? We can split snp & indels because the ndiff will be 0 for snps, but [1,1000+] for indels.
                     elif len(ref)<len(alt):
                         alt = np.concatenate([alt[0:l//2],
                                               np.max(alt[l//2:l//2+ndiff+1], keepdims=True),
