@@ -71,6 +71,7 @@ See below for information on usage and local installation.
       -b BATCH_SIZE, --batch_size BATCH_SIZE
                             Number of variants to batch together (Default: 0). Use this to improve GPU optimization
       -v, --verbose         Enable additional debugging output
+      --enable_gtf_cache    Enable caching of GTF database into memory
     ```
 
 ### Usage (custom)
@@ -83,6 +84,12 @@ Invitae added batching support in April 2023 to get better GPU optimization. Var
 After batches are run, data is put back together in the original order and written to disk. You can control the batching via the `-b` parameter documented above.
 
 ![Batching](docs/Pangolin_Batching_Indexing.png)
+
+### GTF DB Caching
+
+If you are running a larger batch of variants, you can gain additional performance by caching the gtf database into memory. 
+You can enable this behavior with `--enable_gtf_cache`. With this enabled, it'll dump the SQLite database into memory using
+interval trees for the gene information for quick lookups without hitting the disk.
 
 ## Testing
 
