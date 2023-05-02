@@ -1,16 +1,16 @@
+from typing import List
+
 import numpy as np
 import torch
-import torch.utils.data as data
 import torch.nn.functional as F
 import torch.nn as nn
+from pkg_resources import resource_filename
 
 L = 32
 # convolution window size in residual units
-W = np.asarray([11, 11, 11, 11, 11, 11, 11, 11,
-                21, 21, 21, 21, 41, 41, 41, 41])
+W = np.asarray([11, 11, 11, 11, 11, 11, 11, 11, 21, 21, 21, 21, 41, 41, 41, 41])
 # atrous rate in residual units
-AR = np.asarray([1, 1, 1, 1, 4, 4, 4, 4,
-                 10, 10, 10, 10, 25, 25, 25, 25])
+AR = np.asarray([1, 1, 1, 1, 4, 4, 4, 4, 10, 10, 10, 10, 25, 25, 25, 25])
 
 
 class ResBlock(nn.Module):
@@ -47,7 +47,7 @@ class Pangolin(nn.Module):
         self.resblocks, self.convs = nn.ModuleList(), nn.ModuleList()
         for i in range(len(W)):
             self.resblocks.append(ResBlock(L, W[i], AR[i]))
-            if (((i + 1) % 4 == 0) or ((i + 1) == len(W))):
+            if ((i + 1) % 4 == 0) or ((i + 1) == len(W)):
                 self.convs.append(nn.Conv1d(L, L, 1))
         self.conv_last1 = nn.Conv1d(L, 2, 1)
         self.conv_last2 = nn.Conv1d(L, 1, 1)
@@ -64,7 +64,7 @@ class Pangolin(nn.Module):
         j = 0
         for i in range(len(W)):
             conv = self.resblocks[i](conv)
-            if (((i + 1) % 4 == 0) or ((i + 1) == len(W))):
+            if ((i + 1) % 4 == 0) or ((i + 1) == len(W)):
                 dense = self.convs[j](conv)
                 j += 1
                 skip = skip + dense
@@ -81,3 +81,22 @@ class Pangolin(nn.Module):
         return torch.cat([out1, out2, out3, out4, out5, out6, out7, out8], 1)
 
 
+def load_models() -> List:
+    models = []
+    for i in [0, 2, 4, 6]:
+        for j in range(1, 4):
+            model = Pangolin(L, W, AR)
+            if torch.cuda.is_available():
+                model.cuda()
+                weights = torch.load(
+                    resource_filename(__name__, "models/final.%s.%s.3.v2" % (j, i))
+                )
+            else:
+                weights = torch.load(
+                    resource_filename(__name__, "models/final.%s.%s.3.v2" % (j, i)),
+                    map_location=torch.device("cpu"),
+                )
+            model.load_state_dict(weights)
+            model.eval()
+            models.append(model)
+    return models

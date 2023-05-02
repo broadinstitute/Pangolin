@@ -7,19 +7,17 @@ Pangolin can be run on Google Colab, which provides free acess to GPUs and other
 See below for information on usage and local installation.
 
 ### Installation
-* Prerequisites: Python 3.6 or higher and conda, which can both be installed using Miniconda: https://docs.conda.io/en/latest/miniconda.html
-* Install PyTorch: https://pytorch.org/get-started/locally/
-  * If a supported GPU is available, installation with GPU support is recommended (choose an option under "Compute Platform")
-* Install other dependencies:
-  ```
-  conda install -c conda-forge pyvcf
-  pip install gffutils biopython pandas pyfastx
-  ```
+* Prerequisites: Python 3.8 or higher
+* Poetry: See https://python-poetry.org/docs/#installation
 * Install Pangolin:
   ```
-  git clone https://github.com/tkzeng/Pangolin.git
+  git clone https://github.com/invitae/Pangolin.git
   cd Pangolin
-  pip install .
+  poetry install
+  ```
+* Activate env
+  ```
+  poetry shell
   ```
 
 ### Usage (command-line)
@@ -52,7 +50,7 @@ See below for information on usage and local installation.
     ```
     See full options below:
     ```
-    usage: pangolin [-h] [-c COLUMN_IDS] [-m {False,True}] [-s SCORE_CUTOFF] [-d DISTANCE] variant_file reference_file annotation_file output_file
+    usage: pangolin [-h] [-c COLUMN_IDS] [-m {False,True}] [-s SCORE_CUTOFF] [-d DISTANCE] [-b BATCH_SIZE] [-v] variant_file reference_file annotation_file output_file
 
     positional arguments:
       variant_file          VCF or CSV file with a header (see COLUMN_IDS option).
@@ -70,11 +68,36 @@ See below for information on usage and local installation.
                             Output all sites with absolute predicted change in score >= cutoff, instead of only the maximum loss/gain sites.
       -d DISTANCE, --distance DISTANCE
                             Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)
+      -b BATCH_SIZE, --batch_size BATCH_SIZE
+                            Number of variants to batch together (Default: 0). Use this to improve GPU optimization
+      -v, --verbose         Enable additional debugging output
     ```
 
 ### Usage (custom)
 
 See `scripts/custom_usage.py`
+
+### Batching Support
+
+Invitae added batching support in April 2023 to get better GPU optimization. Variants are read in batches and then distributed into collections by tensor sizes and then run through the GPU in larger batches.
+After batches are run, data is put back together in the original order and written to disk. You can control the batching via the `-b` parameter documented above.
+
+![Batching](docs/Pangolin_Batching_Indexing.png)
+
+## Testing
+
+There are unit tests available that run some small scale sets of predictions using data on chromosome 19, see details in 
+the tests about how the data was generated.
+
+```
+poetry run pytest
+```
+
+Testing with coverage
+
+```
+poetry run coverage run --source=pangolin -m pytest && poetry run coverage report -m
+```
 
 ### Citation
 
