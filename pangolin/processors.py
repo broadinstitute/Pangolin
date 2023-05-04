@@ -16,7 +16,7 @@ from pangolin.data_models import Variant, AppConfig
 logger = logging.getLogger(__name__)
 
 
-def process_variants_file(app_config: AppConfig):
+def process_variants_file(app_config: AppConfig) -> None:
     models = load_models()
     batch = PredictionBatch(models, app_config)
     if app_config.variant_file.endswith(".vcf"):
@@ -32,22 +32,20 @@ def handle_batch(
     original_records: List,
     writer: Callable,
     fout: Union[typing.TextIO, VariantFile],
-):
-    # Only combine the records together for what was returned from the batch as the original
-    # may have additional records that have been collected but not processed
+) -> None:
     for prepared_record, original_record in zip(
-        batch.prepared_records, original_records[: len(batch.prepared_records)]
+        batch.prepared_records, original_records
     ):
         writer(original_record, prepared_record.score, fout)
 
 
-def vcf_writer(original_record, score: str, fout: VariantFile):
+def vcf_writer(original_record, score: str, fout: VariantFile) -> None:
     if score != "":
         original_record.info["Pangolin"] = score
     fout.write(original_record)
 
 
-def csv_writer(original_record, score: str, fout: typing.TextIO):
+def csv_writer(original_record, score: str, fout: typing.TextIO) -> None:
     if score == "":
         fout.write(
             ",".join(original_record.to_csv(header=False, index=False).split("\n"))
@@ -90,9 +88,10 @@ def process_vcf(batch: PredictionBatch, models: List, app_config: AppConfig):
                 ref=variant.ref,
                 alt=variant.alts[0],
             )
-            if batch.add_variant(v):
+            batch.add_variant(v)
+            if batch.did_run_predictions:
                 handle_batch(batch, original_records, vcf_writer, fout)
-                original_records = original_records[len(batch.prepared_records) :]
+                original_records.clear()
                 batch.clear_batch()
         else:
             # This is the original path through the code
@@ -141,10 +140,11 @@ def process_csv(batch: PredictionBatch, models: List, app_config: AppConfig):
             # Store original CSV record
             original_records.append(variant)
             v = Variant(lnum=lnum, chr=str(chr), pos=int(pos), ref=ref, alt=alt)
-            # Add variant to batch and if the batch processes, write those results
-            if batch.add_variant(v):
+
+            batch.add_variant(v)
+            if batch.did_run_predictions:
                 handle_batch(batch, original_records, csv_writer, fout)
-                original_records = original_records[len(batch.prepared_records) :]
+                original_records.clear()
                 batch.clear_batch()
         else:
             scores = process_variant_legacy(

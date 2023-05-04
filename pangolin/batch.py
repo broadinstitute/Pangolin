@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pyfastx
 import torch
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from pangolin.data_models import (
     Variant,
@@ -38,6 +38,9 @@ class PredictionBatch:
 
         self.prep_total_time = None
         self.batch_start_time = None
+
+        # Flag to know when the batch was run
+        self.did_run_predictions = False
 
         logger.debug(f"Batch init with batch size: {self.app_config.batch_size}")
 
@@ -107,7 +110,7 @@ class PredictionBatch:
 
         return batch_lookup_indexes
 
-    def prep_all_variants(self):
+    def prep_all_variants(self) -> None:
         prep_time = time.time()
         total_seq_time = 0
         total_encode_time = 0
@@ -135,24 +138,23 @@ class PredictionBatch:
         for prepped_variant in self.prepared_records:
             prepped_variant.locations = self.batch_variant(prepped_variant)
 
-    def add_variant(self, variant: Variant) -> bool:
+    def add_variant(self, variant: Variant) -> None:
         self.total_records += 1
         self.variants.append(variant)
+        self.did_run_predictions = False
 
         # Once we fill the batch, process the records
         if len(self.variants) >= self.app_config.batch_size:
             logger.debug(f"Finished collected variants in batch: {len(self.variants)}")
             self.run_batch()
-            return True
+            self.did_run_predictions = True
 
-        return False
-
-    def run_batch(self):
+    def run_batch(self) -> None:
         self.batch_start_time = time.time()
         self.prep_all_variants()
         self._process_batch()
 
-    def finish(self):
+    def finish(self) -> None:
         logger.debug("Finish")
 
         if len(self.variants) == 0:
@@ -162,7 +164,7 @@ class PredictionBatch:
         # Run remaining variants
         self.run_batch()
 
-    def run_predictions(self, batch):
+    def run_predictions(self, batch) -> List:
         batch_preds = []
         if torch.cuda.is_available():
             batch = batch.to(torch.device("cuda"))
@@ -173,7 +175,7 @@ class PredictionBatch:
                     batch_preds.append(preds)
         return batch_preds
 
-    def _process_batch(self):
+    def _process_batch(self) -> None:
         start = time.time()
         total_batch_predictions = 0
         self.batch_count += 1
@@ -215,7 +217,7 @@ class PredictionBatch:
 
     def _get_score_from_batch(
         self, prepped_record: PreppedVariant, batch_preds: Dict[int, List], strand: str
-    ):
+    ) -> Tuple:
         if len(prepped_record.locations) == 0:
             return None, None
 
@@ -296,7 +298,7 @@ class PredictionBatch:
         )
         return scores
 
-    def clear_batch(self):
+    def clear_batch(self) -> None:
         self.batches.clear()
         del self.variants[:]
         del self.prepared_records[:]
