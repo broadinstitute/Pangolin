@@ -1,2 +1,4 @@
 GRCh37.primary_assembly.genome.fa.gz
 GRCh37.primary_assembly.genome.fa.gz.fxi
+pangolin/__pycache__
+tests/__pycache__

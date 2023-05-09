@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "pangolin"
+version = "1.3.11"
+description = ""
+authors = ["Tony Zeng <tkyzeng@gmail.com>", "Kevin Kazmierczak <kevin.kazmierczak@invitae.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.24.2"
+torch = "^1.13.1"
+gffutils = "^0.11.1"
+pyfastx = "0.8.4"  # This is fixed due to a weird error in the latest version where it complains about missing keys
+pandas = "^1.5.3"
+biopython = "^1.81"
+pysam = "^0.20.0"
+intervaltree = "^3.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.2"
+black = "^23.3.0"
+coverage = "^7.2.3"
+
+[tool.poetry.scripts]
+pangolin = "pangolin.pangolin:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
