@@ -56,7 +56,7 @@ See below for information on usage and local installation.
       variant_file          VCF or CSV file with a header (see COLUMN_IDS option).
       reference_file        FASTA file containing a reference genome sequence.
       annotation_file       gffutils database file. Can be generated using create_db.py.
-      output_file           Prefix for output file. Will be a VCF/CSV if variant_file is VCF/CSV.
+      output_file           Name of output file.
 
     optional arguments:
       -h, --help            show this help message and exit
