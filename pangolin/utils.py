@@ -1,3 +1,4 @@
+"""Script for utility functions used in the pangolin package."""
 import logging
 import time
 from typing import Tuple
@@ -18,11 +19,30 @@ IN_MAP = np.asarray(
 )
 
 
-def compute_score(ref_seq, alt_seq, strand, d, models):
+def one_hot_encode(seq, strand):
+    """One-hot encode a sequence."""
+    seq = seq.upper().replace("A", "1").replace("C", "2")
+    seq = seq.replace("G", "3").replace("T", "4").replace("N", "0")
+    if strand == "+":
+        seq = np.asarray(list(map(int, seq)))
+    elif strand == "-":
+        seq = np.asarray(list(map(int, seq[::-1])))
+        seq = (5 - seq) % 5  # Reverse complement
+    return IN_MAP[seq.astype("int8")]
+
+
+def encode_seqs(ref_seq, alt_seq, strand):
+    """One-hot encode reference and alternate sequences."""
     ref_seq = one_hot_encode(ref_seq, strand).T
     ref_seq = torch.from_numpy(np.expand_dims(ref_seq, axis=0)).float()
     alt_seq = one_hot_encode(alt_seq, strand).T
     alt_seq = torch.from_numpy(np.expand_dims(alt_seq, axis=0)).float()
+    return ref_seq, alt_seq
+
+
+def compute_score(ref_seq, alt_seq, strand, d, models):
+    """Compute the splice loss and gain scores for a variant."""
+    ref_seq, alt_seq = encode_seqs(ref_seq, alt_seq, strand)
 
     if torch.cuda.is_available():
         ref_seq = ref_seq.to(torch.device("cuda"))
@@ -71,6 +91,7 @@ def combine_scores(
     gain_neg,
     app_config: AppConfig,
 ) -> str:
+    """Combine the splice loss and gain scores for a variant."""
     all_gene_scores = []
 
     for genes, loss, gain in (
@@ -147,28 +168,15 @@ def combine_scores(
     return "||".join(all_gene_scores)
 
 
-def one_hot_encode(seq, strand):
-    seq = seq.upper().replace("A", "1").replace("C", "2")
-    seq = seq.replace("G", "3").replace("T", "4").replace("N", "0")
-    if strand == "+":
-        seq = np.asarray(list(map(int, seq)))
-    elif strand == "-":
-        seq = np.asarray(list(map(int, seq[::-1])))
-        seq = (5 - seq) % 5  # Reverse complement
-    return IN_MAP[seq.astype("int8")]
-
-
-def encode_seqs(ref_seq, alt_seq, strand):
-    ref_seq = one_hot_encode(ref_seq, strand).T
-    ref_seq = torch.from_numpy(np.expand_dims(ref_seq, axis=0)).float()
-    alt_seq = one_hot_encode(alt_seq, strand).T
-    alt_seq = torch.from_numpy(np.expand_dims(alt_seq, axis=0)).float()
-    return ref_seq, alt_seq
-
-
 def prepare_variant(
     variant: Variant, gene_annotator: GeneAnnotator, fasta: Fasta, distance: int
 ) -> Tuple[PreppedVariant, TimingDetails]:
+    """Prepare a variant for scoring:
+    get the reference sequence (5000bp + distance on each side) of the variant,
+    annotate the variant with the gene information,
+    and encode the variant sequence into a one-hot encoding.
+    Also time the different steps.
+    """
     chr = variant.chr
     pos = variant.pos
     ref = variant.ref
@@ -219,6 +227,7 @@ def prepare_variant(
                 empty_timing,
             )
 
+    # make sure the reference base matches the reference sequence, force the reference base to be upper case first
     if seq[5000 + distance : 5000 + distance + len(ref)].upper() != ref:
         ref_base = seq[5000 + distance : 5000 + distance + len(ref)]
         skip_message = f"Mismatch between FASTA (ref base: {ref_base}) and variant file (ref base: {ref})."

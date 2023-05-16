@@ -1,3 +1,4 @@
+"""Script to define data models used in the pangolin package."""
 import dataclasses
 from enum import Enum
 from typing import Optional, List
@@ -6,6 +7,8 @@ from torch._C._te import Tensor
 
 
 class SequenceType(Enum):
+    """Enum to represent the type of sequence being encoded."""
+
     POS_REF = 0
     POS_ALT = 1
     NEG_REF = 2
@@ -14,6 +17,8 @@ class SequenceType(Enum):
 
 @dataclasses.dataclass
 class TimingDetails:
+    """Dataclass to hold timing details for a variant."""
+
     seq_time: float = 0
     encode_time: float = 0
     gene_time: float = 0
@@ -21,6 +26,8 @@ class TimingDetails:
 
 @dataclasses.dataclass
 class BatchLookupIndex:
+    """Dataclass to hold the lookup index for a variant in the batching."""
+
     sequence_type: SequenceType
     tensor_size: int
     batch_index: int
@@ -28,6 +35,8 @@ class BatchLookupIndex:
 
 @dataclasses.dataclass
 class AppConfig:
+    """Dataclass to hold the configuration for the app."""
+
     variant_file: str
     output_file: str
     reference_file: str
@@ -42,6 +51,7 @@ class AppConfig:
 
     @classmethod
     def from_args(cls, args) -> "AppConfig":
+        """Create an AppConfig from the command line arguments."""
         return cls(
             variant_file=args.variant_file,
             output_file=args.output_file,
@@ -59,6 +69,8 @@ class AppConfig:
 
 @dataclasses.dataclass
 class Variant:
+    """Dataclass to hold the details of a variant."""
+
     lnum: int
     chr: str
     pos: int
@@ -69,6 +81,8 @@ class Variant:
 
 @dataclasses.dataclass
 class VariantEncodings:
+    """Dataclass to hold the encodings for a variant."""
+
     encoded_ref_pos: Tensor
     encoded_alt_pos: Tensor
     encoded_ref_neg: Tensor
@@ -77,6 +91,8 @@ class VariantEncodings:
 
 @dataclasses.dataclass
 class PreppedVariant:
+    """Dataclass to hold the details of a variant after it has been prepped."""
+
     variant: Variant
     score: str = ""
     skip_message: str = ""
@@ -91,4 +107,5 @@ class PreppedVariant:
 
     @classmethod
     def with_skip_message(cls, variant: Variant, skip_message: str) -> "PreppedVariant":
+        """Create a PreppedVariant with a skip message."""
         return cls(variant=variant, skip_message=skip_message, locations=[])

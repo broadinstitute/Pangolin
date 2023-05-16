@@ -93,8 +93,7 @@ interval trees for the gene information for quick lookups without hitting the di
 
 ## Testing
 
-There are unit tests available that run some small scale sets of predictions using data on chromosome 19, see details in 
-the tests about how the data was generated.
+There are unit tests available that run some small scale sets of predictions using data on chromosome 19, see details in the tests about how the data was generated.
 
 ```
 poetry run pytest

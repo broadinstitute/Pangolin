@@ -1,3 +1,4 @@
+"""legacy functions from pangolin v1.0.1 to process the variant file"""
 import pyfastx
 
 from pangolin.data_models import AppConfig
