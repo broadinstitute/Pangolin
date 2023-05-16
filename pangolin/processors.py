@@ -1,3 +1,5 @@
+"""Script to process variants from a CSV or VCF file, 
+and output the prediction results into a CSV or VCF file."""
 import logging
 from typing import Callable, List, Union
 
@@ -60,6 +62,8 @@ def csv_writer(original_record, score: str, fout: typing.TextIO) -> None:
 
 
 def process_vcf(batch: PredictionBatch, models: List, app_config: AppConfig):
+    """Process a VCF file and output the results to a new VCF file.
+    pysam is used to read and write the VCF files."""
     input_vcf = pysam.VariantFile(app_config.variant_file)
     header = input_vcf.header
     header.add_line(

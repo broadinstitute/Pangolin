@@ -1,3 +1,4 @@
+"""script for running pangolin from the command line"""
 import argparse
 import logging
 from dataclasses import asdict

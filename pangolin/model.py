@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from pkg_resources import resource_filename
 
+# number of dilated convolutional layers
 L = 32
 # convolution window size in residual units
 W = np.asarray([11, 11, 11, 11, 11, 11, 11, 11, 21, 21, 21, 21, 41, 41, 41, 41])
@@ -14,6 +15,8 @@ AR = np.asarray([1, 1, 1, 1, 4, 4, 4, 4, 10, 10, 10, 10, 25, 25, 25, 25])
 
 
 class ResBlock(nn.Module):
+    """Residual block with dilated convolution."""
+
     def __init__(self, L, W, AR, pad=True):
         super(ResBlock, self).__init__()
         self.bn1 = nn.BatchNorm1d(L)
@@ -39,6 +42,8 @@ class ResBlock(nn.Module):
 
 
 class Pangolin(nn.Module):
+    """Pangolin's dilated CNN model."""
+
     def __init__(self, L, W, AR):
         super(Pangolin, self).__init__()
         self.n_chans = L
@@ -82,6 +87,7 @@ class Pangolin(nn.Module):
 
 
 def load_models() -> List:
+    """Load the Pangolin models."""
     models = []
     for i in [0, 2, 4, 6]:
         for j in range(1, 4):

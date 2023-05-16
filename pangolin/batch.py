@@ -1,3 +1,4 @@
+"""Script to batch variants and run them through the model."""
 import logging
 import time
 
@@ -45,6 +46,7 @@ class PredictionBatch:
         logger.debug(f"Batch init with batch size: {self.app_config.batch_size}")
 
     def batch_variant(self, prepped_variant: PreppedVariant) -> List[BatchLookupIndex]:
+        """Add a variant to the batch and return the index to use to pull out the result."""
         # Skip batching this variant if it wasn't encoded for validation reasons
         if not prepped_variant.encodings:
             return []
@@ -111,6 +113,7 @@ class PredictionBatch:
         return batch_lookup_indexes
 
     def prep_all_variants(self) -> None:
+        """Prepare all variants in the batch."""
         prep_time = time.time()
         total_seq_time = 0
         total_encode_time = 0
@@ -139,6 +142,7 @@ class PredictionBatch:
             prepped_variant.locations = self.batch_variant(prepped_variant)
 
     def add_variant(self, variant: Variant) -> None:
+        """Add a variant to the batch."""
         self.total_records += 1
         self.variants.append(variant)
         self.did_run_predictions = False
@@ -165,6 +169,7 @@ class PredictionBatch:
         self.run_batch()
 
     def run_predictions(self, batch) -> List:
+        """Run predictions on a batch of encoded sequences."""
         batch_preds = []
         if torch.cuda.is_available():
             batch = batch.to(torch.device("cuda"))
@@ -176,6 +181,7 @@ class PredictionBatch:
         return batch_preds
 
     def _process_batch(self) -> None:
+        """Process the batch of variants."""
         start = time.time()
         total_batch_predictions = 0
         self.batch_count += 1
@@ -218,6 +224,7 @@ class PredictionBatch:
     def _get_score_from_batch(
         self, prepped_record: PreppedVariant, batch_preds: Dict[int, List], strand: str
     ) -> Tuple:
+        """Get the score from the batch predictions."""
         if len(prepped_record.locations) == 0:
             return None, None
 
