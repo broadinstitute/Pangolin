@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from typing import Tuple
 
@@ -6,8 +7,13 @@ import numpy as np
 from pyfaidx import Fasta
 import torch
 
-from pangolin.batch import Variant, PreppedVariant
-from pangolin.data_models import VariantEncodings, AppConfig, TimingDetails
+from pangolin.data_models import (
+    Variant,
+    PreppedVariant,
+    VariantEncodings,
+    AppConfig,
+    TimingDetails,
+)
 from pangolin.genes import GeneAnnotator
 
 logger = logging.getLogger(__name__)
@@ -16,6 +22,8 @@ logger = logging.getLogger(__name__)
 IN_MAP = np.asarray(
     [[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 )
+
+SEQ_PATTERN = re.compile("^[ACTGN]+$")
 
 
 def compute_score(ref_seq, alt_seq, strand, d, models):
@@ -218,6 +226,17 @@ def prepare_variant(
                 ),
                 empty_timing,
             )
+
+    # This check ensures that only ACTGN characters are in the padded sequence from the FASTA file. If there
+    # are any other characters, the downstream encoding will fail in one_hot_encode
+    if re.search(SEQ_PATTERN, seq.upper()) is None:
+        skip_message = f"Unsupported sequences in ref seq from fasta, found bases: {set(seq).difference(set('ACTGN'))}"
+        return (
+            PreppedVariant.with_skip_message(
+                variant=variant, skip_message=skip_message
+            ),
+            empty_timing,
+        )
 
     if seq[5000 + distance : 5000 + distance + len(ref)].upper() != ref:
         ref_base = seq[5000 + distance : 5000 + distance + len(ref)]
