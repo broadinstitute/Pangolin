@@ -129,10 +129,11 @@ class PangolinScore:
     @column_ids.setter
     def column_ids(self, cids="CHROM,POS,REF,ALT"):
         """"If variant_file is a CSV, column IDs for: 
-        column, default
-        chromosome = CHROM, 
-        variant position = POS, 
-        reference bases = REF, 
+        column            = default name
+        ------              ------------
+        chromosome        = CHROM, 
+        variant position  = POS, 
+        reference bases   = REF, 
         alternative bases = ALT.
         
         Parameters
