@@ -1,4 +1,4 @@
-# Original source code modified to add prediction batching support by Invitae in 2023.
+# Original source code modified to add prediction batching support and bug fixes by Invitae in 2023.
 # Modifications copyright (c) 2023 Invitae Corporation.
 
 from pkg_resources import get_distribution
