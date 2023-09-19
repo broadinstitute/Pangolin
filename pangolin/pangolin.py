@@ -58,7 +58,7 @@ def main():
         "-b",
         "--batch_size",
         type=int,
-        default=0,
+        default=1,
         help="Number of variants to batch together",
     )
     parser.add_argument(

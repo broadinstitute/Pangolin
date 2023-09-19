@@ -69,7 +69,7 @@ See below for information on usage and local installation.
       -d DISTANCE, --distance DISTANCE
                             Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)
       -b BATCH_SIZE, --batch_size BATCH_SIZE
-                            Number of variants to batch together (Default: 0). Use this to improve GPU optimization
+                            Number of variants to batch together (Default: 1). Use this to improve GPU optimization
       -v, --verbose         Enable additional debugging output
       --enable_gtf_cache    Enable caching of GTF database into memory
     ```
