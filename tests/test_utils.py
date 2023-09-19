@@ -45,67 +45,67 @@ def test_unsupported_ref_seq(seq, expected):
         {"GENE1": [5, 15]},
         [0.0, 0.0, 0.0, 0.0, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, 0.0, 0.0, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
-        "GENE1|-2:0.0|-2:0.0|Warnings:",
+        "GENE1|-2:0.0|-2:0.0|Warnings:SingleExonTranscript",
         id="no position inside window, zero gain and loss arrays"
     ),
     pytest.param(
         {"GENE1": [5, 15]},
         [0.0, 0.0, 0.0, 0.7, -0.7],  # gain array masked to [0.0, 0.0, 0.0, 0.0, -0.7]
         [0.5, -0.5, 0.0, 0.0, 0.0],  # loss array masked to [0.5, 0.0, 0.0, 0.0, 0.0]
-        "GENE1|1:0.7|-1:0.0|Warnings:",
+        "GENE1|1:0.7|-1:0.0|Warnings:SingleExonTranscript",
         id="no position inside window, gain and loss arrays"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.0, 0.0, 0.0, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, 0.0, 0.0, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         "GENE1|-2:0.0|-2:0.0|Warnings:",
         id="zero gain and loss arrays"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.0, 0.0, 0.7, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, 0.0, 0.0, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         "GENE1|-2:0.0|-2:0.0|Warnings:",
         id="gain score is masked"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.0, 0.0, 0.0, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, -0.5, 0.0, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         "GENE1|-2:0.0|-2:0.0|Warnings:",
         id="loss score is masked"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.0, 0.0, 0.7, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, -0.5, 0.0, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         "GENE1|-2:0.0|-2:0.0|Warnings:",
         id="gain and loss scores are masked"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.0, 0.0, 0.7, 0.0],  # gain array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         [0.0, 0.0, 0.0, -0.5, 0.0],  # loss array masked to [0.0, 0.0, 0.0, -0.5, 0.0]
         "GENE1|-2:0.0|1:-0.5|Warnings:",
         id="gain score is masked, loss score is protected"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.7, 0.0, 0.0, 0.0],  # gain array masked to [0.0, 0.7, 0.0, 0.0, 0.0]
         [0.0, 0.0, -0.5, 0.0, 0.0],  # loss array masked to [0.0, 0.0, 0.0, 0.0, 0.0]
         "GENE1|-1:0.7|-2:0.0|Warnings:",
         id="gain score is not masked, loss score is masked"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.0, 0.7, 0.0, 0.0, 0.0],  # gain array masked to [0.0, 0.7, 0.0, 0.0, 0.0]
         [0.0, 0.0, 0.0, -0.5, 0.0],  # loss array masked to [0.0, 0.0, 0.0, -0.5, 0.0]
         "GENE1|-1:0.7|1:-0.5|Warnings:",
         id="gain score and loss score are not masked (loss score is protected)"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16]},
         [0.6, 0.7, 0.5, 0.4, 0.3],  # gain array masked to [0.6, 0.7, 0.5, 0.0, 0.3]
         [-0.3, -0.4, -0.4, -0.5, -0.3],  # loss array masked to [0.0, 0.0, 0.0, -0.5, 0.0]
         "GENE1|-1:0.7|1:-0.5|Warnings:",
@@ -113,7 +113,7 @@ def test_unsupported_ref_seq(seq, expected):
     ),
     # with multiple genes, gain and loss arrays are the same for all genes, but filter positions may differ by gene
     pytest.param(
-        {"GENE1": [5, 11, 15], "GENE2": [5, 11, 15]},
+        {"GENE1": [5, 11, 15, 16], "GENE2": [5, 11, 15, 16]},
         # for both genes, gain array masked to [0.6, 0.7, 0.5, 0.0, 0.3]
         [0.6, 0.7, 0.5, 0.4, 0.3],
         # for both genes, loss array masked to [0.0, 0.0, 0.0, -0.5, 0.0]
@@ -122,7 +122,7 @@ def test_unsupported_ref_seq(seq, expected):
         id="multiple genes, same positions"
     ),
     pytest.param(
-        {"GENE1": [5, 11, 15], "GENE2": [5, 9, 15]},
+        {"GENE1": [5, 11, 15, 16], "GENE2": [5, 9, 15, 16]},
         # for GENE1, gain array masked to [0.6, 0.7, 0.5, 0.0, 0.3]
         # for GENE2, gain array masked to [0.6, 0.0, 0.5, 0.4, 0.3]
         [0.6, 0.7, 0.5, 0.4, 0.3],
@@ -140,6 +140,7 @@ def test_combine_scores(genes, gain, loss, expected_score):
     In loss array, negative numbers at the remaining positions (all positions excluding the position masked in gain) are masked to 0.
     Gain score is the highest remaining score. Loss score is the lowest remaining score.
     Expected score is the gain score followed by the loss score.
+    Position array for each gene represents exon boundaries, and therefore always has an even number length.
     Positive-strand and negative-strand cases behave the same way for the same genes/gain/loss data.
     """
     app_config = Mock(

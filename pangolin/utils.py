@@ -90,7 +90,7 @@ def combine_scores(
         # "Number of bases on either side of the variant for which splice scores should be calculated."
         # When app_config.distance is d, gain and loss are arrays have size `2d + 1`.
         for gene, positions in genes.items():
-            warnings = "Warnings:"
+            warnings = []
             positions = np.array(positions)
             # Convert to relative base positions (relative to left side of distance window)
             positions = positions - (variant_pos - app_config.distance)
@@ -110,8 +110,13 @@ def combine_scores(
                 loss[not_positions] = np.maximum(loss[not_positions], 0)
 
             elif app_config.mask == "True":
-                warnings += "NoAnnotatedSitesToMaskForThisGene"
+                warnings.append("NoAnnotatedSitesToMaskForThisGene")
                 loss[:] = np.maximum(loss[:], 0)
+
+            # Warn about single-exon transcripts
+            num_exons = len(positions) // 2
+            if num_exons == 1:
+                warnings.append("SingleExonTranscript")
 
             if app_config.score_exons == "True":
                 scores1 = gene + "_sites1|"
@@ -162,7 +167,7 @@ def combine_scores(
                     round(loss[l], 2),
                 )
 
-            score += warnings
+            score += "Warnings:" + ",".join(warnings)
             all_gene_scores.append(score.strip("|"))
 
     return "||".join(all_gene_scores)
