@@ -177,7 +177,6 @@ def encode_seqs(ref_seq, alt_seq, strand):
 def prepare_variant(
     variant: Variant, gene_annotator: GeneAnnotator, fasta: Fasta, distance: int
 ) -> Tuple[PreppedVariant, TimingDetails]:
-    chr = variant.chr
     pos = variant.pos
     ref = variant.ref
     alt = variant.alt
@@ -204,15 +203,17 @@ def prepare_variant(
         )
 
     # try to make vcf chromosomes compatible with reference chromosomes
-    fasta_keys = fasta.keys()
-    if chr not in fasta_keys and "chr" + chr in fasta_keys:
-        variant.chr = "chr" + chr
-    elif chr not in fasta_keys and chr[3:] in fasta_keys:
-        variant.chr = chr[3:]
+    fasta_keys = list(fasta.keys())
+    if variant.chr not in fasta_keys and "chr" + variant.chr in fasta_keys:
+        fasta_chr = "chr" + variant.chr
+    elif variant.chr not in fasta_keys and variant.chr[3:] in fasta_keys:
+        fasta_chr = variant.chr[3:]
+    else:
+        fasta_chr = variant.chr
 
     seq = ""
     try:
-        seq = fasta[chr][pos - 5001 - distance : pos + len(ref) + 4999 + distance].seq
+        seq = fasta[fasta_chr][pos - 5001 - distance : pos + len(ref) + 4999 + distance].seq
     except Exception as e:
         logger.exception(e)
         skip_message = (
@@ -253,7 +254,7 @@ def prepare_variant(
     total_seq_time = time.time() - seq_time
 
     gene_time = time.time()
-    genes_pos, genes_neg = gene_annotator.get_genes(chr, pos)
+    genes_pos, genes_neg = gene_annotator.get_genes(variant.chr, pos)
     if len(genes_pos) + len(genes_neg) == 0:
         skip_message = (
             "Variant not contained in a gene body. Do GTF/FASTA chromosome names match?"
