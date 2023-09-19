@@ -209,6 +209,8 @@ def prepare_variant(
         or (len(ref) != 1 and len(alt) != 1 and len(ref) != len(alt))
     ):
         skip_message = "Variant format not supported."
+    elif not all(base in 'ACTG' for base in alt):
+        skip_message = "Unsupported bases in alt seq."
     elif len(ref) > 2 * distance:
         skip_message = "Deletion too large"
 
