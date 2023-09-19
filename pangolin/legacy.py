@@ -20,7 +20,7 @@ def get_genes(chrom, pos, gtf):
         elif gene[6] == "-":
             genes_neg[gene_id] = exons
 
-    return (genes_pos, genes_neg)
+    return genes_pos, genes_neg
 
 
 def process_variant_legacy(
