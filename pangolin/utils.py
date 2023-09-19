@@ -81,16 +81,27 @@ def combine_scores(
 ) -> str:
     all_gene_scores = []
 
-    for genes, loss, gain in (
+    for genes, orig_loss, orig_gain in (
         (genes_pos, loss_pos, gain_pos),
         (genes_neg, loss_neg, gain_neg),
     ):
+        # The index values of `gain` and `loss` are relative base positions (relative to left side of distance window).
+        # The value of `app_config.distance` is also a relative base position and is equal to the
+        # "Number of bases on either side of the variant for which splice scores should be calculated."
+        # When app_config.distance is d, gain and loss are arrays have size `2d + 1`.
         for gene, positions in genes.items():
             warnings = "Warnings:"
             positions = np.array(positions)
+            # Convert to relative base positions (relative to left side of distance window)
             positions = positions - (variant_pos - app_config.distance)
 
+            # Make copies of the loss/gain for each gene to avoid overwriting data between genes
+            loss = np.copy(orig_loss)
+            gain = np.copy(orig_gain)
+
+            # Mask gain and loss scores for positions that occur in the provided array of positions
             if app_config.mask == "True" and len(positions) != 0:
+                # find positions that are within the distance window
                 positions_filt = positions[(positions >= 0) & (positions < len(loss))]
                 # set splice gain at annotated sites to 0
                 gain[positions_filt] = np.minimum(gain[positions_filt], 0)
@@ -142,6 +153,8 @@ def combine_scores(
                     np.argmin(loss),
                     np.argmax(gain),
                 )
+                # left side of each colon: relative base position (relative to variant position)
+                # right side of each colon: score for that position
                 score += "%s:%s|%s:%s|" % (
                     g - app_config.distance,
                     round(gain[g], 2),
