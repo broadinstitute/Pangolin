@@ -91,7 +91,7 @@ If you are running a larger batch of variants, you can gain additional performan
 You can enable this behavior with `--enable_gtf_cache`. With this enabled, it'll dump the SQLite database into memory using
 interval trees for the gene information for quick lookups without hitting the disk.
 
-## Testing
+### Testing
 
 There are unit tests available that run some small scale sets of predictions using data on chromosome 19, see details in 
 the tests about how the data was generated.
