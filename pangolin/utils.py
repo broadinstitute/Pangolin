@@ -205,7 +205,6 @@ def prepare_variant(
     seq_time = time.time()
     if (
         len(set("ACGT").intersection(set(ref))) == 0
-        or len(set("ACGT").intersection(set(alt))) == 0
         or (len(ref) != 1 and len(alt) != 1 and len(ref) != len(alt))
     ):
         skip_message = "Variant format not supported."
