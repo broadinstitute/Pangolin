@@ -2,7 +2,7 @@
 
 Pangolin is a deep-learning based method for predicting splice site strengths (for details, see [Zeng and Li, Genome Biology 2022](https://doi.org/10.1186/s13059-022-02664-4)). It is available as a command-line tool that can be run on a VCF or CSV file containing variants of interest; Pangolin will predict changes in splice site strength due to each variant, and return a file of the same format. Pangolin's models can also be used with custom sequences.
 
-Pangolin can be run on Google Colab, which provides free acess to GPUs and other computing resources: https://colab.research.google.com/github/tkzeng/Pangolin/blob/main/PangolinColab.ipynb
+Original Pangolin source can be run on Google Colab, which provides free acess to GPUs and other computing resources: https://colab.research.google.com/github/tkzeng/Pangolin/blob/main/PangolinColab.ipynb
 
 See below for information on usage and local installation.
 
@@ -69,7 +69,7 @@ See below for information on usage and local installation.
       -d DISTANCE, --distance DISTANCE
                             Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)
       -b BATCH_SIZE, --batch_size BATCH_SIZE
-                            Number of variants to batch together (Default: 0). Use this to improve GPU optimization
+                            Number of variants to batch together (Default: 1). Use this to improve GPU optimization
       -v, --verbose         Enable additional debugging output
       --enable_gtf_cache    Enable caching of GTF database into memory
     ```
@@ -91,7 +91,7 @@ If you are running a larger batch of variants, you can gain additional performan
 You can enable this behavior with `--enable_gtf_cache`. With this enabled, it'll dump the SQLite database into memory using
 interval trees for the gene information for quick lookups without hitting the disk.
 
-## Testing
+### Testing
 
 There are unit tests available that run some small scale sets of predictions using data on chromosome 19, see details in 
 the tests about how the data was generated.
