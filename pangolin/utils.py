@@ -1,4 +1,8 @@
+# Original source code modified to add prediction batching support and bugfixes by Invitae in 2023.
+# Modifications copyright (c) 2023 Invitae Corporation.
+
 import logging
+import re
 import time
 from typing import Tuple
 
@@ -6,8 +10,13 @@ import numpy as np
 from pyfaidx import Fasta
 import torch
 
-from pangolin.batch import Variant, PreppedVariant
-from pangolin.data_models import VariantEncodings, AppConfig, TimingDetails
+from pangolin.data_models import (
+    Variant,
+    PreppedVariant,
+    VariantEncodings,
+    AppConfig,
+    TimingDetails,
+)
 from pangolin.genes import GeneAnnotator
 
 logger = logging.getLogger(__name__)
@@ -16,6 +25,8 @@ logger = logging.getLogger(__name__)
 IN_MAP = np.asarray(
     [[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 )
+
+SEQ_PATTERN = re.compile("^[ACTGN]+$")
 
 
 def compute_score(ref_seq, alt_seq, strand, d, models):
@@ -73,16 +84,27 @@ def combine_scores(
 ) -> str:
     all_gene_scores = []
 
-    for genes, loss, gain in (
+    for genes, orig_loss, orig_gain in (
         (genes_pos, loss_pos, gain_pos),
         (genes_neg, loss_neg, gain_neg),
     ):
+        # The index values of `gain` and `loss` are relative base positions (relative to left side of distance window).
+        # The value of `app_config.distance` is also a relative base position and is equal to the
+        # "Number of bases on either side of the variant for which splice scores should be calculated."
+        # When app_config.distance is d, gain and loss are arrays have size `2d + 1`.
         for gene, positions in genes.items():
-            warnings = "Warnings:"
+            warnings = []
             positions = np.array(positions)
+            # Convert to relative base positions (relative to left side of distance window)
             positions = positions - (variant_pos - app_config.distance)
 
+            # Make copies of the loss/gain for each gene to avoid overwriting data between genes
+            loss = np.copy(orig_loss)
+            gain = np.copy(orig_gain)
+
+            # Mask gain and loss scores for positions that occur in the provided array of positions
             if app_config.mask == "True" and len(positions) != 0:
+                # find positions that are within the distance window
                 positions_filt = positions[(positions >= 0) & (positions < len(loss))]
                 # set splice gain at annotated sites to 0
                 gain[positions_filt] = np.minimum(gain[positions_filt], 0)
@@ -91,8 +113,13 @@ def combine_scores(
                 loss[not_positions] = np.maximum(loss[not_positions], 0)
 
             elif app_config.mask == "True":
-                warnings += "NoAnnotatedSitesToMaskForThisGene"
+                warnings.append("NoAnnotatedSitesToMaskForThisGene")
                 loss[:] = np.maximum(loss[:], 0)
+
+            # Warn about single-exon transcripts
+            num_exons = len(positions) // 2
+            if num_exons == 1:
+                warnings.append("SingleExonTranscript")
 
             if app_config.score_exons == "True":
                 scores1 = gene + "_sites1|"
@@ -134,6 +161,8 @@ def combine_scores(
                     np.argmin(loss),
                     np.argmax(gain),
                 )
+                # left side of each colon: relative base position (relative to variant position)
+                # right side of each colon: score for that position
                 score += "%s:%s|%s:%s|" % (
                     g - app_config.distance,
                     round(gain[g], 2),
@@ -141,7 +170,7 @@ def combine_scores(
                     round(loss[l], 2),
                 )
 
-            score += warnings
+            score += "Warnings:" + ",".join(warnings)
             all_gene_scores.append(score.strip("|"))
 
     return "||".join(all_gene_scores)
@@ -169,7 +198,6 @@ def encode_seqs(ref_seq, alt_seq, strand):
 def prepare_variant(
     variant: Variant, gene_annotator: GeneAnnotator, fasta: Fasta, distance: int
 ) -> Tuple[PreppedVariant, TimingDetails]:
-    chr = variant.chr
     pos = variant.pos
     ref = variant.ref
     alt = variant.alt
@@ -180,10 +208,11 @@ def prepare_variant(
     seq_time = time.time()
     if (
         len(set("ACGT").intersection(set(ref))) == 0
-        or len(set("ACGT").intersection(set(alt))) == 0
         or (len(ref) != 1 and len(alt) != 1 and len(ref) != len(alt))
     ):
         skip_message = "Variant format not supported."
+    elif not all(base in 'ACTG' for base in alt):
+        skip_message = "Unsupported bases in alt seq."
     elif len(ref) > 2 * distance:
         skip_message = "Deletion too large"
 
@@ -196,15 +225,17 @@ def prepare_variant(
         )
 
     # try to make vcf chromosomes compatible with reference chromosomes
-    fasta_keys = fasta.keys()
-    if chr not in fasta_keys and "chr" + chr in fasta_keys:
-        variant.chr = "chr" + chr
-    elif chr not in fasta_keys and chr[3:] in fasta_keys:
-        variant.chr = chr[3:]
+    fasta_keys = list(fasta.keys())
+    if variant.chr not in fasta_keys and "chr" + variant.chr in fasta_keys:
+        fasta_chr = "chr" + variant.chr
+    elif variant.chr not in fasta_keys and variant.chr[3:] in fasta_keys:
+        fasta_chr = variant.chr[3:]
+    else:
+        fasta_chr = variant.chr
 
     seq = ""
     try:
-        seq = fasta[chr][pos - 5001 - distance : pos + len(ref) + 4999 + distance].seq
+        seq = fasta[fasta_chr][pos - 5001 - distance : pos + len(ref) + 4999 + distance].seq
     except Exception as e:
         logger.exception(e)
         skip_message = (
@@ -218,6 +249,17 @@ def prepare_variant(
                 ),
                 empty_timing,
             )
+
+    # This check ensures that only ACTGN characters are in the padded sequence from the FASTA file. If there
+    # are any other characters, the downstream encoding will fail in one_hot_encode
+    if re.search(SEQ_PATTERN, seq.upper()) is None:
+        skip_message = f"Unsupported sequences in ref seq from fasta, found bases: {set(seq).difference(set('ACTGN'))}"
+        return (
+            PreppedVariant.with_skip_message(
+                variant=variant, skip_message=skip_message
+            ),
+            empty_timing,
+        )
 
     if seq[5000 + distance : 5000 + distance + len(ref)].upper() != ref:
         ref_base = seq[5000 + distance : 5000 + distance + len(ref)]
@@ -234,7 +276,7 @@ def prepare_variant(
     total_seq_time = time.time() - seq_time
 
     gene_time = time.time()
-    genes_pos, genes_neg = gene_annotator.get_genes(chr, pos)
+    genes_pos, genes_neg = gene_annotator.get_genes(variant.chr, pos)
     if len(genes_pos) + len(genes_neg) == 0:
         skip_message = (
             "Variant not contained in a gene body. Do GTF/FASTA chromosome names match?"

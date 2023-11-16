@@ -1,3 +1,6 @@
+# Original source code modified to add prediction batching support and bugfixes by Invitae in 2023.
+# Modifications copyright (c) 2023 Invitae Corporation.
+
 import dataclasses
 from enum import Enum
 from typing import Optional, List

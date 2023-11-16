@@ -1,3 +1,6 @@
+# Original source code modified to add prediction batching support and bugfixes by Invitae in 2023.
+# Modifications copyright (c) 2023 Invitae Corporation.
+
 import logging
 import time
 from typing import Dict, Tuple
@@ -67,4 +70,4 @@ class GeneAnnotator:
             elif gene[6] == "-":
                 genes_neg[gene_id] = exons
 
-        return (genes_pos, genes_neg)
+        return genes_pos, genes_neg

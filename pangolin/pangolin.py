@@ -1,3 +1,6 @@
+# Original source code modified to add prediction batching support and bugfixes by Invitae in 2023.
+# Modifications copyright (c) 2023 Invitae Corporation.
+
 import argparse
 import logging
 from dataclasses import asdict
@@ -58,7 +61,7 @@ def main():
         "-b",
         "--batch_size",
         type=int,
-        default=0,
+        default=1,
         help="Number of variants to batch together",
     )
     parser.add_argument(
